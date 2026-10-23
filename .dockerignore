@@ -7,5 +7,4 @@ __pycache__
 *.pyc
 .env
 *.env
-tests
 README.md

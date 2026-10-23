@@ -17,3 +17,20 @@ terraform/.terraform/
 terraform/*.tfstate
 terraform/*.tfstate.*
 terraform/.terraform.lock.hcl
+*accessKeys*.csv
+# Terraform local files - do not commit
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfplan.*
+crash.log
+crash.*.log
+infra/generated_vpc.backup.txt
+
+# Local secrets and credentials
+.env
+.env.*
+!.env.example
+*accessKeys*.csv
+*.pem
