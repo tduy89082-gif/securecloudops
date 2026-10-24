@@ -1,9 +1,13 @@
-from urllib.request import urlopen
+from fastapi.testclient import TestClient
+
+from app.main import app
+
+
+client = TestClient(app)
 
 
 def test_health_endpoint_returns_200():
-    with urlopen(
-        "http://127.0.0.1:8000/health",
-        timeout=5,
-    ) as response:
-        assert response.status == 200
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"

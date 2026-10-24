@@ -36,3 +36,14 @@ infra/generated_vpc.backup.txt
 *.pem
 
 
+# Terraform local cache and state
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfplan.*
+crash.log
+crash.*.log
+
+# Generated backup
+infra/generated_vpc.backup.txt
