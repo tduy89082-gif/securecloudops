@@ -25,6 +25,55 @@ rm -rf "$STAGING"
 git clone https://github.com/tduy89082-gif/securecloudops.git "$STAGING"
 git -C "$STAGING" checkout --detach "__DEPLOY_SHA__"
 
+# Ensure Docker Compose CLI plugin is installed.
+if ! docker compose version >/dev/null 2>&1; then
+  echo "Docker Compose plugin not found. Installing..."
+
+  case "$(uname -m)" in
+    x86_64)
+      COMPOSE_ARCH="x86_64"
+      ;;
+    aarch64|arm64)
+      COMPOSE_ARCH="aarch64"
+      ;;
+    *)
+      echo "Unsupported architecture: $(uname -m)" >&2
+      exit 1
+      ;;
+  esac
+
+  COMPOSE_VERSION="v5.6.1"
+  COMPOSE_ASSET="docker-compose-linux-${COMPOSE_ARCH}"
+  COMPOSE_URL="https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}"
+
+  TMP_BIN="$(mktemp)"
+  TMP_SUMS="$(mktemp)"
+
+  curl --fail --silent --show-error --location \
+    "${COMPOSE_URL}/${COMPOSE_ASSET}" -o "$TMP_BIN"
+
+  curl --fail --silent --show-error --location \
+    "${COMPOSE_URL}/checksums.txt" -o "$TMP_SUMS"
+
+  EXPECTED_SHA="$(awk -v n="$COMPOSE_ASSET" \
+    '{ f=$2; sub(/^\*/, "", f); if (f==n) print $1 }' "$TMP_SUMS")"
+
+  ACTUAL_SHA="$(sha256sum "$TMP_BIN" | awk '{print $1}')"
+
+  if [ -z "$EXPECTED_SHA" ] || [ "$EXPECTED_SHA" != "$ACTUAL_SHA" ]; then
+    rm -f "$TMP_BIN" "$TMP_SUMS"
+    echo "Docker Compose checksum verification failed." >&2
+    exit 1
+  fi
+
+  PLUGIN_DIR="/usr/local/lib/docker/cli-plugins"
+  install -d "$PLUGIN_DIR"
+  install -m 0755 "$TMP_BIN" "$PLUGIN_DIR/docker-compose"
+  rm -f "$TMP_BIN" "$TMP_SUMS"
+fi
+
+docker compose version
+
 # Giữ bản source hiện tại để có thể phục hồi.
 if [ -d "$PROJECT" ]; then
   mv "$PROJECT" "$BACKUP"
