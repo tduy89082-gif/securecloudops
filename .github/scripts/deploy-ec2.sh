@@ -74,6 +74,66 @@ fi
 
 docker compose version
 
+
+# Ensure Docker Buildx is new enough for Compose builds.
+BUILDX_VERSION="v0.38.1"
+
+if ! docker buildx version 2>/dev/null | grep -q "$BUILDX_VERSION"; then
+  case "$(uname -m)" in
+    x86_64)
+      BUILDX_ARCH="amd64"
+      BUILDX_SHA256="e25d5cd675092bb5d1d03632fdc46cdf3fede7b514dc5f023a105e00d3ce5ad4"
+      ;;
+    aarch64|arm64)
+      BUILDX_ARCH="arm64"
+      BUILDX_SHA256="3b83b3731916ba433feccaaa689fe5bcdc81c641d92c8e6c2ea865dfa141c97a"
+      ;;
+    *)
+      echo "Unsupported architecture: $(uname -m)" >&2
+      exit 1
+      ;;
+  esac
+
+  BUILDX_URL="https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-${BUILDX_ARCH}"
+  TMP_BIN="$(mktemp)"
+
+  curl --fail --silent --show-error --location \
+    "$BUILDX_URL" -o "$TMP_BIN"
+
+  printf '%s  %s\n' "$BUILDX_SHA256" "$TMP_BIN" | sha256sum -c -
+
+  install -d /usr/local/lib/docker/cli-plugins
+  install -m 0755 "$TMP_BIN" \
+    /usr/local/lib/docker/cli-plugins/docker-buildx
+  rm -f "$TMP_BIN"
+fi
+
+docker buildx version
+
+
+# Fetch the database password from Parameter Store.
+POSTGRES_PASSWORD="$(aws ssm get-parameter \
+  --name "/securecloudops/dev/database/password" \
+  --with-decryption \
+  --query 'Parameter.Value' \
+  --output text \
+  --region ap-southeast-2)"
+
+if [ -z "$POSTGRES_PASSWORD" ] || [ "$POSTGRES_PASSWORD" = "None" ]; then
+  echo "Database password was not returned by Parameter Store." >&2
+  exit 1
+fi
+
+export POSTGRES_PASSWORD
+
+# URL-encode the password before constructing the database URL.
+ENCODED_PASSWORD="$(python3 -c \
+  'import os; from urllib.parse import quote; print(quote(os.environ["POSTGRES_PASSWORD"], safe=""))')"
+
+export DATABASE_URL="postgresql+psycopg://app_user:${ENCODED_PASSWORD}@db:5432/securecloudops"
+unset ENCODED_PASSWORD
+
+
 # Giữ bản source hiện tại để có thể phục hồi.
 if [ -d "$PROJECT" ]; then
   mv "$PROJECT" "$BACKUP"
