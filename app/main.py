@@ -1,10 +1,16 @@
-from fastapi import Depends, FastAPI, HTTPException, status
+
+import hmac
+import os
+
+from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import Base, engine, get_db
 from app.models import Task
 from app.schemas import TaskCreate, TaskRead, TaskUpdate
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -13,6 +19,28 @@ app = FastAPI(
     version="0.1.0",
     description="Local workload for the SecureCloudOps cloud/security learning project.",
 )
+
+# Secret is injected through the environment.
+# On local development, an empty value disables origin verification.
+# Production deployment must retrieve a non-empty value from SSM.
+ORIGIN_VERIFY_TOKEN = os.getenv("ORIGIN_VERIFY_TOKEN", "")
+ORIGIN_VERIFY_HEADER = "x-securecloudops-origin-verify"
+
+
+@app.middleware("http")
+async def verify_cloudfront_origin(request: Request, call_next):
+    if not ORIGIN_VERIFY_TOKEN:
+        return await call_next(request)
+
+    supplied_token = request.headers.get(ORIGIN_VERIFY_HEADER, "")
+
+    if not hmac.compare_digest(supplied_token, ORIGIN_VERIFY_TOKEN):
+        return JSONResponse(
+            status_code=403,
+            content={"detail": "Forbidden"},
+        )
+
+    return await call_next(request)
 
 
 @app.get("/health")
@@ -28,10 +56,10 @@ def list_tasks(db: Session = Depends(get_db)) -> list[Task]:
 @app.post("/tasks", response_model=TaskRead, status_code=status.HTTP_201_CREATED)
 def create_task(payload: TaskCreate, db: Session = Depends(get_db)) -> Task:
     task = Task(
-    title=payload.title,
-    description=payload.description,
-    completed=False,
-)
+        title=payload.title,
+        description=payload.description,
+        completed=False,
+    )
     db.add(task)
     db.commit()
     db.refresh(task)

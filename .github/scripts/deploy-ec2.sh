@@ -126,6 +126,21 @@ fi
 
 export POSTGRES_PASSWORD
 
+# Fetch the CloudFront origin verification token from Parameter Store.
+ORIGIN_VERIFY_TOKEN="$(aws ssm get-parameter \
+  --name "/securecloudops/dev/cloudfront/origin-verify-token" \
+  --with-decryption \
+  --query 'Parameter.Value' \
+  --output text \
+  --region ap-southeast-2)"
+
+if [ -z "$ORIGIN_VERIFY_TOKEN" ] || [ "$ORIGIN_VERIFY_TOKEN" = "None" ]; then
+  echo "CloudFront origin verification token was not returned." >&2
+  exit 1
+fi
+
+export ORIGIN_VERIFY_TOKEN
+
 # URL-encode the password before constructing the database URL.
 ENCODED_PASSWORD="$(python3 -c \
   'import os; from urllib.parse import quote; print(quote(os.environ["POSTGRES_PASSWORD"], safe=""))')"
@@ -160,12 +175,33 @@ fi
 # Kiểm tra API trong tối đa khoảng 60 giây.
 attempt=0
 while [ "$attempt" -lt 30 ]; do
-  if curl -fsS http://127.0.0.1:8000/health; then
+  if python3 - <<'PY'
+import os
+import urllib.request
+
+token = os.environ.get("ORIGIN_VERIFY_TOKEN", "")
+
+if not token:
+    raise SystemExit("Origin verification token is missing.")
+
+request = urllib.request.Request(
+    "http://127.0.0.1:8000/health",
+    headers={
+        "X-SecureCloudOps-Origin-Verify": token
+    }
+)
+
+with urllib.request.urlopen(request, timeout=5) as response:
+    print(response.read().decode("utf-8"))
+
+    if response.status != 200:
+        raise SystemExit("API health check failed.")
+PY
+then
     echo
     docker compose ps
     exit 0
-  fi
-
+fi
   attempt=$((attempt + 1))
   sleep 2
 done

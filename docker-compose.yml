@@ -18,6 +18,7 @@ services:
     build: .
     environment:
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL must be set}
+      ORIGIN_VERIFY_TOKEN: "${ORIGIN_VERIFY_TOKEN:-}"
     depends_on:
       db:
         condition: service_healthy
