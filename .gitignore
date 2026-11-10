@@ -1,49 +1,77 @@
+# Python
 .venv/
+**/.venv/
 __pycache__/
+**/__pycache__/
 .pytest_cache/
+**/.pytest_cache/
+.ruff_cache/
+**/.ruff_cache/
 *.py[cod]
+.coverage
+coverage.xml
+htmlcov/
+
+# Local environment and credentials
 .env
 .env.*
 !.env.example
+*.pem
+*.key
+*accessKeys*.csv
+*credentials*.csv
+.aws/
+
+# Local AWS CLI / Terraform binaries are not project source
+/CLI/
+
+# Terraform local state, plans and provider cache
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfplan.*
+crash.log
+crash.*.log
+# Keep .terraform.lock.hcl under version control.
+
+# IDE / OS
 .idea/
 .vscode/
 .DS_Store
-coverage.xml
-htmlcov/
-dist/
+Thumbs.db
+
+# Build artifacts
+*.phase*-backup
+inspector-filter.json
 build/
+dist/
 *.egg-info/
-terraform/.terraform/
-terraform/*.tfstate
-terraform/*.tfstate.*
-terraform/.terraform.lock.hcl
-*accessKeys*.csv
-# Terraform local files - do not commit
-**/.terraform/
-*.tfstate
-*.tfstate.*
-*.tfplan
-*.tfplan.*
-crash.log
-crash.*.log
-infra/generated_vpc.backup.txt
 
-# Local secrets and credentials
-.env
-.env.*
-!.env.example
-*accessKeys*.csv
-*.pem
+# Legacy account-specific Phase 10 snapshots/templates (use sanitized templates under end phase/templates/)
+end phase/README.txt
+end phase/event-pattern-template.json
+end phase/iam-trust-policy.json
+end phase/lambda-permissions-policy-template.json
+end phase/test-event-template.json
 
+# Local account-specific Phase 10 deployment artifacts (keep on the workstation only)
+end phase/dry-run-response.json
+end phase/event-pattern-production.json
+end phase/event-pattern-test.json
+end phase/event-pattern.json
+end phase/eventbridge-target.json
+end phase/integration-negative-event.json
+end phase/integration-test-event.json
+end phase/lambda-environment.json
+end phase/lambda-execution-policy.json
+end phase/sample-response.json
+end phase/test-dry-run-event.json
+end phase/test-negative-event.json
+end phase/test-sample-event.json
+end phase/securecloudops-lambda.zip
 
-# Terraform local cache and state
-**/.terraform/
-*.tfstate
-*.tfstate.*
-*.tfplan
-*.tfplan.*
-crash.log
-crash.*.log
-
-# Generated backup
-infra/generated_vpc.backup.txt
+# Local generated Terraform import/state snapshots
+infra/imports.local.tf
+infra/terraform.tfvars
+infra/terraform.tfvars.json

@@ -1,0 +1,28 @@
+{
+  "source": [
+    "aws.guardduty"
+  ],
+  "detail-type": [
+    "GuardDuty Finding"
+  ],
+  "account": [
+    "REPLACE_WITH_ACCOUNT_ID"
+  ],
+  "detail": {
+    "accountId": [
+      "REPLACE_WITH_ACCOUNT_ID"
+    ],
+    "type": [
+      "UnauthorizedAccess:EC2/TorClient",
+      "UnauthorizedAccess:EC2/TorRelay"
+    ],
+    "severity": [
+      {
+        "numeric": [
+          ">=",
+          4
+        ]
+      }
+    ]
+  }
+}

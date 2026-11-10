@@ -1,0 +1,8 @@
+{
+  "resourceId": [
+    {
+      "value": "REPLACE_WITH_EC2_INSTANCE_ID",
+      "comparison": "EQUALS"
+    }
+  ]
+}

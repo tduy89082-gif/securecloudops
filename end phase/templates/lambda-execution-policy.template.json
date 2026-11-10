@@ -1,0 +1,39 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadEC2AndSecurityGroups",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeInstances",
+        "ec2:DescribeSecurityGroups"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "TagOnlyTargetInstance",
+      "Effect": "Allow",
+      "Action": "ec2:CreateTags",
+      "Resource": "arn:aws:ec2:REPLACE_WITH_REGION:REPLACE_WITH_ACCOUNT_ID:instance/REPLACE_WITH_EC2_INSTANCE_ID"
+    },
+    {
+      "Sid": "ModifyOnlyTargetAndQuarantineGroup",
+      "Effect": "Allow",
+      "Action": "ec2:ModifyInstanceAttribute",
+      "Resource": [
+        "arn:aws:ec2:REPLACE_WITH_REGION:REPLACE_WITH_ACCOUNT_ID:instance/REPLACE_WITH_EC2_INSTANCE_ID",
+        "arn:aws:ec2:REPLACE_WITH_REGION:REPLACE_WITH_ACCOUNT_ID:security-group/REPLACE_WITH_QUARANTINE_SG_ID"
+      ]
+    },
+    {
+      "Sid": "WriteLambdaLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:REPLACE_WITH_REGION:REPLACE_WITH_ACCOUNT_ID:log-group:/aws/lambda/securecloudops-guardduty-remediation:*"
+    }
+  ]
+}

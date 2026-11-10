@@ -1,0 +1,6 @@
+[
+  {
+    "Id": "SecureCloudOpsRemediationLambda",
+    "Arn": "arn:aws:lambda:REPLACE_WITH_REGION:REPLACE_WITH_ACCOUNT_ID:function:securecloudops-guardduty-remediation"
+  }
+]
